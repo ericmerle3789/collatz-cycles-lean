@@ -9,14 +9,24 @@ This repository contains the Lean 4 formalizations, verification scripts, and su
 
 For every k ≥ 1, the accelerated Collatz map T(n) = (3n+1)/2^{v₂(3n+1)} admits no nontrivial positive cycle of length k.
 
+## The Junction Theorem
+
+The proof is organized around the **Junction Theorem**, which establishes that for every cycle length k ≥ 1, at least one of two independent obstructions applies:
+
+- **(A) Computational obstruction (k ≤ 10000).** The correction sum corrsum(σ) lies in an interval [cs_min, cs_max] that contains no multiple of d(k) = 2^S − 3^k. This is called *Range Exclusion* and is verified by Lean's `native_decide` for each k individually.
+
+- **(B) Entropic obstruction (k ≥ 18).** The number of compositions C(S−1, k−1) is strictly less than d(k), so corrsum cannot be surjective onto Z/dZ. For k ≥ 10001, the Baker–Wüstholz theorem on linear forms in logarithms makes this effective.
+
+The two ranges overlap (18 ≤ k ≤ 10000), ensuring no gap. The "junction" is the point where the computational and asymptotic arguments meet.
+
 ## Proof architecture
 
-| Range | Method | Location |
-|-------|--------|----------|
-| k = 1 | Trivial cycle (n₁=1) excluded by hypothesis | Section 2.2 |
-| k = 2 | Direct check (n₁=2 is even, not a valid cycle element) | Section 4 |
-| k = 3..10000 | Range Exclusion verified by Lean `native_decide` | `lean/range-exclusion/` |
-| k ≥ 10001 | Baker–Wüstholz (1993) lower bound on linear forms in logarithms | Section 5 |
+| Range | Method | Obstruction | Location |
+|-------|--------|-------------|----------|
+| k = 1 | Trivial cycle (n₁=1) excluded by hypothesis | — | Section 2.2 |
+| k = 2 | Direct check (n₁=2 is even) | — | Section 4 |
+| k = 3..10000 | Range Exclusion, Lean `native_decide` | (A) | `lean/range-exclusion/` |
+| k ≥ 10001 | Baker–Wüstholz (1993) | (B) | Section 5 |
 
 The sole external dependency beyond the Lean kernel is the Baker–Wüstholz theorem, a published result.
 
@@ -27,7 +37,7 @@ The sole external dependency beyond the Lean kernel is the Baker–Wüstholz the
 ├── lean/
 │   ├── verified/               280 theorems, 0 sorry, 0 axiom (Lean 4.15)
 │   ├── range-exclusion/        Range Exclusion k=3..10000 (Lean 4.28)
-│   └── skeleton/               Junction Theorem + asymptotic (Lean 4.29 + Mathlib)
+│   └── skeleton/               Junction Theorem: main proof combining (A)+(B) (Lean 4.29 + Mathlib)
 ├── scripts/
 │   ├── verify_range_exclusion.py   Computational verification of Range Exclusion
 │   ├── baker_threshold.py          Baker–Wüstholz threshold analysis

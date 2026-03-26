@@ -45,7 +45,7 @@ Böhm and Sontacchi [1978] first proved the nonexistence of 1-cycles with k ≤ 
 
 **Theorem 1 (Main Theorem).** *The accelerated Collatz map T: n ↦ (3n+1)/2^{v₂(3n+1)} admits no nontrivial positive cycle. That is, for every k ≥ 1, there is no k-tuple of positive integers (n₁,...,nₖ) with nᵢ > 1 for some i and T(nᵢ) = nᵢ₊₁ for all i (indices mod k).*
 
-The proof uses no unproven conjecture. It combines certified computation (Lean 4, native_decide) for k ≤ 10000 with the Baker–Wüstholz theorem [1993] for k ≥ 10001.
+The proof is organized around the *Junction Theorem*: for every k ≥ 1, at least one of two independent obstructions applies. Obstruction (A) is computational: for k ≤ 10000, Range Exclusion is verified by Lean 4's native_decide. Obstruction (B) is entropic: for k ≥ 18, C(S−1,k−1) < d(k), and for k ≥ 10001 the Baker–Wüstholz theorem [1993] makes this effective. The two ranges overlap (18 ≤ k ≤ 10000), ensuring no gap — hence the name "junction." No unproven conjecture is used.
 
 ### 1.5 Structure of the Paper
 

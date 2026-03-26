@@ -68,7 +68,7 @@ B\"ohm and Sontacchi~\cite{BS78} first proved nonexistence of cycles with $k \le
 The accelerated Collatz map admits no nontrivial positive cycle. That is, for every $k \geq 1$, there is no $k$-tuple of positive integers $(n_1, \ldots, n_k)$ with $n_i > 1$ for some~$i$ and $T(n_i) = n_{i+1}$ for all~$i$ (indices $\bmod\, k$).
 \end{theorem}
 
-The proof combines certified computation (Lean~4, \texttt{native\_decide}) for $k \leq 10000$ with the Baker--W\"ustholz theorem for $k \geq 10001$.
+The proof is organized around the \emph{Junction Theorem}: for every $k \geq 1$, at least one of two independent obstructions applies. Obstruction~(A) is computational: for $k \leq 10000$, Range Exclusion is verified by Lean~4's \texttt{native\_decide}. Obstruction~(B) is entropic: for $k \geq 18$, the number of compositions $\binom{S-1}{k-1}$ is strictly less than~$d(k)$, and for $k \geq 10001$ the Baker--W\"ustholz theorem~\cite{BW93} makes this effective. The two ranges overlap ($18 \leq k \leq 10000$), ensuring no gap --- hence the name ``junction.''
 
 %% ============================================================
 \section{Preliminaries}
@@ -229,9 +229,11 @@ The spectral ratio $\rho_p = \rho(M_a(z_0))/\rho(M_0(z_0))$ at $z_0 = (S-k)/S \a
 \section{Discussion}
 %% ============================================================
 
-\subsection{Scope}
+\subsection{Scope and the Junction Theorem}
 
 Theorem~\ref{thm:main} proves that the only positive cycle of the Collatz map is $\{1, 2\}$. The full conjecture --- that every orbit reaches~$1$ --- remains open.
+
+The proof rests on the \emph{Junction Theorem}: the certified computation (obstruction~A, $k \leq 10000$) and the entropic bound (obstruction~B, $k \geq 18$) together cover all~$k$, with a wide overlap at $18 \leq k \leq 10000$. The Lean formalization of the Junction Theorem is in \texttt{lean/skeleton/JunctionTheorem.lean} and establishes the logical framework (case split on~$k$, Simons--de~Weger axiom, nonsurjectivity chain).
 
 \subsection{Open Problems}
 

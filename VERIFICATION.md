@@ -1,69 +1,42 @@
 # Verification Guide
 
-How to verify each claim in the paper.
+## What is proved
 
-## Sections 2–3: Steiner's equation and Range Exclusion
+| Claim | Status | Verification |
+|-------|--------|-------------|
+| N₀(d) = 0 for k = 3..15 | **PROVED** (Lean, 0 sorry) | `lean/verified/`, `lake build` |
+| Steiner's equation | **PROVED** (Lean) | `lean/skeleton/JunctionTheorem.lean`, `steiner_equation` |
+| Nonsurjectivity k ≥ 18 | **PROVED** (Lean) | `lean/skeleton/`, `crystal_nonsurjectivity` |
+| No cycle k ≤ 91 | **PROVED** (external) | Hercher (2025), J. Integer Seq. |
+| Spectral gap ρ_p < 1 | **PROVED** (Wielandt) | `scripts/spectral_analysis.py` |
 
-| Claim | Verification |
-|-------|-------------|
-| Steiner's equation (eq. 1–3) | `lean/skeleton/JunctionTheorem.lean`, theorem `steiner_equation` |
-| corrsum definition | `lean/range-exclusion/CorrSumAvoidance/Basic.lean`, def `corrSum` |
-| corrsum bounds (Proposition 2.1) | `lean/range-exclusion/CorrSumAvoidance/RangeExclusion.lean`, defs `cs_min`, `cs_max` |
-| Range Exclusion check | `lean/range-exclusion/CorrSumAvoidance/RangeExclusion.lean`, def `checkRE` |
+## What is NOT proved
 
-## Section 4: Certified computation (k ≤ 10000)
+| Claim | Status | Issue |
+|-------|--------|-------|
+| N₀(d) = 0 for k > 15 | **OPEN** | Lean verified stops at k=15 |
+| Range Exclusion k=3..10000 | **INVALID** | lean/range-exclusion/ uses wrong corrsum formula |
+| Baker argument k ≥ 10001 | **INVALID** | Applies to wrong function |
+| N₀(d) = 0 for all k | **OPEN** | Gap between nonsurjectivity and N₀=0 |
 
-| Claim | Verification |
-|-------|-------------|
-| N₀(d(k)) = 0 for k = 3..40 | `lean/range-exclusion/CorrSumAvoidance/Theorems.lean` — one `native_decide` per k |
-| N₀(d(k)) = 0 for k = 3..10000 | `lean/range-exclusion/CorrSumAvoidance/RangeExclusion.lean` — batch `native_decide` |
-| 280 theorems, 0 sorry, 0 axiom | `lean/verified/` — run `lake build` then `grep -r sorry --include="*.lean"` |
+## The corrsum formula
 
-To compile and verify:
+The correct Steiner formula (proved in `lean/skeleton/JunctionTheorem.lean`):
+
+    n₁ · (2^S − 3^k) = Σ_{i=0}^{k-1} 3^{k-1-i} · 2^{A_i}
+
+where A = (0, A_1, ..., A_{k-1}) are cumulative positions with 0 < A_1 < ... < A_{k-1} < S.
+
+This is implemented correctly in `lean/verified/CollatzVerified/Basic.lean` as `corrSumList`
+with `compList` (which uses `enumIncr` to generate strictly increasing position sequences).
+
+The `lean/range-exclusion/` module uses a DIFFERENT formula (`enumMonotone` with gap values).
+See `docs/AUDIT_CORRSUM.md`.
+
+## Lean compilation
 
 ```bash
-cd lean/range-exclusion && lake build   # ~6 minutes
-cd lean/verified && lake build          # requires Lean 4.15.0
+cd lean/verified && lake build          # 280 theorems, 0 sorry — CORRECT
+cd lean/skeleton                        # Requires Lean 4.29 + Mathlib
+cd lean/range-exclusion && lake build   # Compiles but proves wrong thing — see WARNING.md
 ```
-
-## Section 5: Baker–Wüstholz (k ≥ 10001)
-
-| Claim | Verification |
-|-------|-------------|
-| Baker–Wüstholz constant C₀ ≈ 2.6 × 10⁷ | `python scripts/baker_threshold.py` |
-| range/d → 0 for large k | `python scripts/baker_threshold.py` (table output) |
-| Baker axiom in Lean | `lean/range-exclusion/CorrSumAvoidance/RangeExclusion.lean`, line `axiom baker_lmn` |
-
-## Section 6: Spectral analysis (supplementary)
-
-| Claim | Verification |
-|-------|-------------|
-| Rank 1 at z = 1 (Theorem 6.1) | `python scripts/spectral_analysis.py` — column `rank@1` = 1 for all primes |
-| Wielandt gap (Theorem 6.3) | `python scripts/spectral_analysis.py` — column `rho_p` < 1 for all primes |
-| Doubly stochastic (Proposition 6.4) | `python scripts/spectral_analysis.py` — column `DS` = Y for all primes |
-| ρ_p < 0.82 (Section 6.5) | `python scripts/spectral_analysis.py` — max ρ_p = 0.8205 at p = 7 |
-| Transfer matrix Lean theorems | `lean/verified/CollatzVerified/TransferMatrix.lean` — 31 theorems |
-
-## Section 8: Lean summary
-
-| Claim | Verification |
-|-------|-------------|
-| 280 theorems across 7 modules | `lean/verified/CollatzVerified/` — 7 .lean files |
-| 0 sorry, 0 axiom | `cd lean/verified && grep -r "sorry" --include="*.lean" \| grep -v "^.*--"` (all in comments) |
-| Junction Theorem skeleton | `lean/skeleton/JunctionTheorem.lean` — combines Simons–de Weger + nonsurjectivity |
-| Asymptotic bound k ≥ 666 | `lean/skeleton/AsymptoticBound.lean` — γ ≥ 1/40 proved |
-
-## Junction Theorem architecture
-
-The **Junction Theorem** (`lean/skeleton/JunctionTheorem.lean`) is the logical framework:
-
-```
-For every k ≥ 1:
-  if k < 68  → Simons–de Weger (axiom, published 2005)
-  if k ≥ 18  → nonsurjectivity: C(S−1, k−1) < d(k)
-    - k ∈ [18, 665]  → native_decide (FiniteCases*.lean)
-    - k ≥ 666         → asymptotic bound (AsymptoticBound.lean)
-  overlap at 18 ≤ k ≤ 67 ensures no gap
-```
-
-The Range Exclusion (`lean/range-exclusion/`) provides a stronger, independent proof for k = 3..10000 that does not rely on nonsurjectivity but directly verifies that 0 ∉ [cs_min mod d, cs_max mod d].

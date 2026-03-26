@@ -2,35 +2,43 @@
 
 Companion code for: *Nonexistence of Nontrivial Cycles in the Collatz Dynamics* (Eric Merle, 2026).
 
-## Contents
+## Result
 
-**`paper/`** — Article in markdown, LaTeX, and PDF.
+N₀(d(k)) = 0 (no composition achieves corrsum ≡ 0 mod d) is established:
+- For k = 3..15 by Lean 4 certified computation (0 sorry, 0 axiom)
+- For k ≤ 91 by Hercher (2025), independently
+- For k ≥ 18, nonsurjectivity C(S−1,k−1) < d is proved (Lean skeleton)
 
-**`lean/range-exclusion/`** — Lean 4.28 proof that N₀(d(k)) = 0 for k = 3 to 10000, by `native_decide`. Two published axioms (Baker–Wüstholz 1993, Simons–de Weger 2005). Compile with `lake build`.
+## Known Issue
 
-**`lean/verified/`** — 280 structural theorems (Lean 4.15). 0 sorry, 0 axiom. Covers Steiner's equation, nonsurjectivity, CRT, zero-exclusion for k = 3..15, transfer matrix properties. Compile with `lake build`.
+The `lean/range-exclusion/` module contains a formula error: it computes a different
+function than Steiner's corrsum. This module's results do not establish cycle nonexistence.
+The correct proofs are in `lean/verified/` (k = 3..15) and `lean/skeleton/` (nonsurjectivity).
+See `docs/AUDIT_CORRSUM.md` for the full analysis.
 
-**`lean/skeleton/`** — Junction Theorem formalization (Lean 4.29 + Mathlib). Combines Simons–de Weger (k < 68) with the entropic nonsurjectivity bound (k ≥ 18). The asymptotic argument for k ≥ 666 is in `AsymptoticBound.lean`.
+## Repository structure
 
-**`scripts/`** — Python verification of the Baker–Wüstholz threshold, Range Exclusion, and the spectral analysis of Section 6.
+```
+├── paper/                      Article (md, tex, pdf)
+├── lean/
+│   ├── verified/               280 theorems, 0 sorry, 0 axiom (Lean 4.15) — CORRECT
+│   ├── skeleton/               Junction Theorem (Lean 4.29 + Mathlib) — CORRECT
+│   └── range-exclusion/        Range Exclusion — ⚠️ FORMULA ERROR (see WARNING.md)
+├── scripts/                    Python verification
+├── docs/
+│   ├── AUDIT_CORRSUM.md        Corrsum bug analysis
+│   └── PROOF_ASSEMBLY.md       Proof assembly
+└── VERIFICATION.md             Article ↔ code mapping
+```
 
-**`docs/`** — Proof assembly document and Lean theorem inventory.
-
-See **[VERIFICATION.md](VERIFICATION.md)** for a section-by-section mapping between the article and the code.
-
-## Quick start
+## Verification
 
 ```bash
-# Verify the main proof (Range Exclusion, k = 3..10000)
-cd lean/range-exclusion && lake build
+# Correct proofs (k = 3..15, Steiner formula)
+cd lean/verified && lake build    # 280 theorems, 0 sorry
 
-# Verify structural theorems (280 theorems, 0 sorry)
-cd lean/verified && lake build
-
-# Run supplementary Python checks
-pip install numpy mpmath
+# Python check with correct formula
 python scripts/verify_range_exclusion.py
-python scripts/spectral_analysis.py
 ```
 
 ## License

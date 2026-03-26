@@ -12,9 +12,15 @@
 
 ## Abstract
 
-We prove that the Collatz map T(n) = n/2 if n is even, T(n) = (3n+1)/2 if n is odd, admits no nontrivial positive cycle. The proof proceeds in two parts. For cycle lengths k ≤ 10000, the result is established by certified computation in Lean 4 using native_decide: for each such k and the corresponding S = S_min(k), the correction sum corrsum(σ) lies in an interval [cs_min, cs_max] that contains no multiple of d(k) = 2^S − 3^k (Range Exclusion). For k ≥ 10001, the result follows from the theorem of Baker and Wüstholz [1993], which provides a lower bound on |2^S − 3^k| exceeding the range cs_max − cs_min, so that no multiple of d falls within the corrsum interval. No unproven conjecture is used; the sole external input beyond the Lean kernel is the Baker–Wüstholz theorem, a published result in the theory of linear forms in logarithms.
+We study the nonexistence of nontrivial positive cycles in the Collatz dynamics. Using Steiner's equation (1977), cycle existence for length k reduces to the divisibility condition d(k) | corrsum(σ), where d(k) = 2^S − 3^k and corrsum is a weighted sum over gap compositions. We establish three results:
 
-We supplement this existence proof with a spectral analysis of the transfer matrices governing corrsum mod p, showing that they have rank 1 for every nontrivial character. By Wielandt's theorem (1950), the spectral gap persists under the composition constraint, providing a structural explanation for why corrsum avoids the residue 0 mod d.
+(1) For k = 3 to 15, no composition satisfies the divisibility condition. This is proved by exhaustive computation in Lean 4 (280 theorems, 0 sorry, 0 axiom), using the correct Steiner corrsum formula with cumulative positions.
+
+(2) For k ≥ 18, the number of compositions C(S−1, k−1) is strictly less than d(k) (nonsurjectivity), proved in Lean 4 via entropy bounds. This shows corrsum cannot be surjective onto Z/dZ, though it does not by itself identify which residues are missed.
+
+(3) We provide a spectral analysis of the transfer matrices governing corrsum mod p for primes p dividing d(k). These matrices have rank 1 for every nontrivial character (verified for 20 primes), and Wielandt's theorem (1950) guarantees a spectral gap under the composition constraint.
+
+Combined with Hercher (2025), who proved nonexistence of cycles for k ≤ 91 by refined computation, our results cover all k ≤ 91. The gap between nonsurjectivity (k ≥ 18) and N₀(d) = 0 for k > 91 remains open.
 
 ---
 
@@ -41,15 +47,19 @@ Following Simons and de Weger [2005], a *cycle* of the accelerated Collatz map i
 
 Böhm and Sontacchi [1978] first proved the nonexistence of 1-cycles with k ≤ 2. Steiner [1977] reduced the cycle problem to a diophantine equation. Eliahou [1993] improved the lower bounds on cycle lengths. Simons and de Weger [2005] verified nonexistence of cycles for k ≤ 10⁸ computationally. Hercher [2025] extended the bound to k ≤ 91 using refined methods. Tao [2022] proved that "almost all" orbits eventually fall below any prescribed bound, but this does not exclude cycles.
 
-### 1.4 Our Result
+### 1.4 Our Results
 
-**Theorem 1 (Main Theorem).** *The accelerated Collatz map T: n ↦ (3n+1)/2^{v₂(3n+1)} admits no nontrivial positive cycle. That is, for every k ≥ 1, there is no k-tuple of positive integers (n₁,...,nₖ) with nᵢ > 1 for some i and T(nᵢ) = nᵢ₊₁ for all i (indices mod k).*
+**Theorem 1 (Certified zero-exclusion).** *For every k with 3 ≤ k ≤ 15 and S = S_min(k), the number N₀(d) of compositions σ of S into k parts ≥ 1 with d | corrsum(σ) equals zero. Hence no nontrivial cycle of length k ≤ 15 exists.*
 
-The proof is organized around the *Junction Theorem*: for every k ≥ 1, at least one of two independent obstructions applies. Obstruction (A) is computational: for k ≤ 10000, Range Exclusion is verified by Lean 4's native_decide. Obstruction (B) is entropic: for k ≥ 18, C(S−1,k−1) < d(k), and for k ≥ 10001 the Baker–Wüstholz theorem [1993] makes this effective. The two ranges overlap (18 ≤ k ≤ 10000), ensuring no gap — hence the name "junction." No unproven conjecture is used.
+*Proof.* By exhaustive computation in Lean 4 (v4.15.0), verified by the Lean kernel. □
+
+**Theorem 2 (Nonsurjectivity).** *For every k ≥ 18, C(S−1, k−1) < d(k). In particular, the evaluation map corrsum: Comp(S,k) → Z/dZ is not surjective.*
+
+**Corollary (No cycle for k ≤ 91).** Theorem 1 covers k ≤ 15. Hercher [2025] independently proves nonexistence for k ≤ 91. Theorem 2 gives nonsurjectivity for k ≥ 18 but does not by itself identify which residues are missed.
 
 ### 1.5 Structure of the Paper
 
-Section 2 recalls Steiner's equation and fixes notation. Section 3 presents the Range Exclusion argument, which is the core of the proof. Section 4 establishes the certified computation for k ≤ 10000. Section 5 proves the asymptotic bound for k ≥ 10001 via Baker–Wüstholz. Section 6 presents the spectral analysis via transfer matrices (structural explanation, not required for the proof). Section 7 discusses the result and open problems.
+Section 2 recalls Steiner's equation and fixes notation. Section 3 establishes the nonsurjectivity bound. Section 4 presents the certified computation for k ≤ 15. Section 5 discusses the asymptotic regime and the open gap. Section 6 presents the spectral analysis via transfer matrices (structural insight). Section 7 discusses the result and open problems.
 
 ---
 
@@ -67,11 +77,11 @@ where
 
 and
 
-    corrsum(σ) = Σⱼ₌₁ᵏ 3^{k−j} · 2^{gⱼ₊₁ + ··· + gₖ}         (3)
+    corrsum(σ) = Σᵢ₌₀ᵏ⁻¹ 3^{k−1−i} · 2^{Pᵢ}                    (3)
 
-A nontrivial cycle of length k exists if and only if there exists a composition σ of S into k parts ≥ 1 (with S such that 2^S > 3^k) such that d divides corrsum(σ) and n₁ = corrsum(σ)/d is a positive integer.
+where P₀ = 0 and Pᵢ = g₁ + g₂ + ··· + gᵢ for i ≥ 1 are the cumulative position sums. A nontrivial cycle of length k exists if and only if there exists a composition σ of S into k parts ≥ 1 (with S such that 2^S > 3^k) such that d divides corrsum(σ) and n₁ = corrsum(σ)/d is a positive odd integer.
 
-**Convention.** The indexing in (3) follows Steiner [1977] and Lagarias [1985]: j runs from 1 to k, and the exponent of 2 in the j-th term is the partial sum gⱼ₊₁ + ··· + gₖ (with the convention that this is 0 when j = k).
+**Convention.** The positions Pᵢ satisfy 0 = P₀ < P₁ < ··· < P_{k−1} < S (since each gⱼ ≥ 1). This is the formulation used in the Lean formalization (`corrSumList` in `CollatzVerified/Basic.lean`) and proved correct via Steiner's equation (`steiner_equation` in `JunctionTheorem.lean`).
 
 ### 2.2 The Minimal S and Relevant Values
 

@@ -31,7 +31,7 @@
 \maketitle
 
 \begin{abstract}
-We prove that the Collatz map $T(n) = n/2$ if $n$ is even, $T(n) = (3n+1)/2$ if $n$ is odd, admits no nontrivial positive cycle. The proof proceeds in two parts. For cycle lengths $k \leq 10000$, the result is established by certified computation in Lean~4 using \texttt{native\_decide}: for each such $k$, the correction sum $\corr(\sigma)$ lies in an interval $[\mathrm{cs_{min}}, \mathrm{cs_{max}}]$ that contains no multiple of $d(k) = 2^S - 3^k$ (Range Exclusion). For $k \geq 10001$, the result follows from the theorem of Baker and W\"ustholz~\cite{BW93}, which provides a lower bound on $|2^S - 3^k|$ exceeding the corrsum range. No unproven conjecture is used.
+We study the nonexistence of nontrivial positive cycles in the Collatz dynamics. For cycle lengths $k = 3$ to~$15$, we prove $N_0(d) = 0$ (no gap composition achieves corrsum $\equiv 0 \pmod{d}$) by exhaustive computation in Lean~4 (280 theorems, 0~\texttt{sorry}, 0~axiom). For $k \geq 18$, we prove nonsurjectivity: $\binom{S-1}{k-1} < d(k)$. Combined with Hercher~\cite{Hercher25} ($k \leq 91$), our results cover all $k \leq 91$. The gap between nonsurjectivity and $N_0(d) = 0$ for $k > 91$ remains open.
 
 We supplement this with a spectral analysis of the transfer matrices governing $\corr \bmod p$, showing that they have rank~1 for every nontrivial character. By Wielandt's theorem~\cite{Wielandt50}, the spectral gap persists under the composition constraint, providing a structural explanation for why $\corr$ avoids the residue~$0$.
 \end{abstract}
@@ -64,8 +64,8 @@ B\"ohm and Sontacchi~\cite{BS78} first proved nonexistence of cycles with $k \le
 
 \subsection{Main Result}
 
-\begin{theorem}[Main Theorem]\label{thm:main}
-The accelerated Collatz map admits no nontrivial positive cycle. That is, for every $k \geq 1$, there is no $k$-tuple of positive integers $(n_1, \ldots, n_k)$ with $n_i > 1$ for some~$i$ and $T(n_i) = n_{i+1}$ for all~$i$ (indices $\bmod\, k$).
+\begin{theorem}[Certified zero-exclusion]\label{thm:main}
+For every $k$ with $3 \leq k \leq 15$ and $S = S_{\min}(k)$, the number $N_0(d)$ of compositions~$\sigma$ of~$S$ into $k$ parts $\geq 1$ with $d \mid \corr(\sigma)$ equals zero. Hence no nontrivial cycle of length $k \leq 15$ exists.
 \end{theorem}
 
 The proof is organized around the \emph{Junction Theorem}: for every $k \geq 1$, at least one of two independent obstructions applies. Obstruction~(A) is computational: for $k \leq 10000$, Range Exclusion is verified by Lean~4's \texttt{native\_decide}. Obstruction~(B) is entropic: for $k \geq 18$, the number of compositions $\binom{S-1}{k-1}$ is strictly less than~$d(k)$, and for $k \geq 10001$ the Baker--W\"ustholz theorem~\cite{BW93} makes this effective. The two ranges overlap ($18 \leq k \leq 10000$), ensuring no gap --- hence the name ``junction.''
@@ -82,9 +82,9 @@ n_1 = \frac{\corr(\sigma)}{d},
 \end{equation}
 where $d = 2^S - 3^k$ and
 \begin{equation}\label{eq:corrsum}
-\corr(\sigma) = \sum_{j=1}^{k} 3^{k-j} \cdot 2^{g_{j+1} + \cdots + g_k}.
+\corr(\sigma) = \sum_{i=0}^{k-1} 3^{k-1-i} \cdot 2^{P_i},
 \end{equation}
-The exponent is $0$ when $j = k$ (empty sum convention).
+where $P_0 = 0$ and $P_i = g_1 + \cdots + g_i$ for $i \geq 1$ are the cumulative position sums, satisfying $0 = P_0 < P_1 < \cdots < P_{k-1} < S$.
 
 \subsection{The Minimal~$S$}
 

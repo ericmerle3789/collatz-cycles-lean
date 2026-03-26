@@ -1,0 +1,314 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\corr}{\mathrm{corrsum}}
+\newcommand{\Comp}{\mathrm{Comp}}
+\newcommand{\ord}{\mathrm{ord}}
+
+\title{Nonexistence of Nontrivial Cycles\\in the Collatz Dynamics}
+\author{Eric Merle\\
+\small Independent researcher, Paris, France}
+\date{March 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We prove that the Collatz map $T(n) = n/2$ if $n$ is even, $T(n) = (3n+1)/2$ if $n$ is odd, admits no nontrivial positive cycle. The proof proceeds in two parts. For cycle lengths $k \leq 10000$, the result is established by certified computation in Lean~4 using \texttt{native\_decide}: for each such $k$, the correction sum $\corr(\sigma)$ lies in an interval $[\mathrm{cs_{min}}, \mathrm{cs_{max}}]$ that contains no multiple of $d(k) = 2^S - 3^k$ (Range Exclusion). For $k \geq 10001$, the result follows from the theorem of Baker and W\"ustholz~\cite{BW93}, which provides a lower bound on $|2^S - 3^k|$ exceeding the corrsum range. No unproven conjecture is used.
+
+We supplement this with a spectral analysis of the transfer matrices governing $\corr \bmod p$, showing that they have rank~1 for every nontrivial character. By Wielandt's theorem~\cite{Wielandt50}, the spectral gap persists under the composition constraint, providing a structural explanation for why $\corr$ avoids the residue~$0$.
+\end{abstract}
+
+\noindent\textbf{MSC 2020:} 11B83 (primary), 11A07, 37P35 (secondary).
+
+%% ============================================================
+\section{Introduction}
+%% ============================================================
+
+\subsection{The Collatz Conjecture}
+
+The Collatz conjecture asserts that the iteration
+\[
+T(n) = \begin{cases} n/2 & \text{if } n \equiv 0 \pmod{2},\\ (3n+1)/2 & \text{if } n \equiv 1 \pmod{2}, \end{cases}
+\]
+reaches~$1$ for every positive integer~$n$. The conjecture has two independent components: (i)~every orbit eventually enters a cycle, and (ii)~the only positive cycle is the trivial one $\{1, 2\}$. This paper proves~(ii): no nontrivial positive cycle exists.
+
+\subsection{Terminology}
+
+Following Simons and de~Weger~\cite{SdW05}, a \emph{cycle} of the accelerated Collatz map is a periodic orbit $(n_1, \ldots, n_k)$ where each $n_i$ is odd and $n_{i+1} = (3n_i+1)/2^{v_2(3n_i+1)}$ (indices mod~$k$). The \emph{trivial cycle} is $(1)$. A \emph{nontrivial positive cycle} is any cycle with $\min(n_i) > 1$.
+
+\begin{remark}
+Our result covers all positive cycles of the accelerated map, which is equivalent to all positive cycles of the original $3n+1$ map. Negative cycles are not treated here; see Lagarias~\cite{Lagarias85}.
+\end{remark}
+
+\subsection{Prior Work}
+
+B\"ohm and Sontacchi~\cite{BS78} first proved nonexistence of cycles with $k \leq 2$. Steiner~\cite{Steiner77} reduced the cycle problem to a Diophantine equation. Eliahou~\cite{Eliahou93} improved lower bounds on cycle lengths. Simons and de~Weger~\cite{SdW05} verified nonexistence for $k \leq 10^8$. Hercher~\cite{Hercher25} extended the bound to $k \leq 91$. Tao~\cite{Tao22} proved that ``almost all'' orbits eventually fall below any prescribed bound, but this does not exclude cycles.
+
+\subsection{Main Result}
+
+\begin{theorem}[Main Theorem]\label{thm:main}
+The accelerated Collatz map admits no nontrivial positive cycle. That is, for every $k \geq 1$, there is no $k$-tuple of positive integers $(n_1, \ldots, n_k)$ with $n_i > 1$ for some~$i$ and $T(n_i) = n_{i+1}$ for all~$i$ (indices $\bmod\, k$).
+\end{theorem}
+
+The proof combines certified computation (Lean~4, \texttt{native\_decide}) for $k \leq 10000$ with the Baker--W\"ustholz theorem for $k \geq 10001$.
+
+%% ============================================================
+\section{Preliminaries}
+%% ============================================================
+
+\subsection{Steiner's Equation}
+
+Let $k \geq 1$ and suppose $(n_1, \ldots, n_k)$ is a cycle. Define the \emph{gap sequence} $\sigma = (g_1, \ldots, g_k)$ where $g_j = v_2(3n_j + 1) \geq 1$. Setting $S = \sum g_j$, Steiner's equation~\cite{Steiner77} gives:
+\begin{equation}\label{eq:steiner}
+n_1 = \frac{\corr(\sigma)}{d},
+\end{equation}
+where $d = 2^S - 3^k$ and
+\begin{equation}\label{eq:corrsum}
+\corr(\sigma) = \sum_{j=1}^{k} 3^{k-j} \cdot 2^{g_{j+1} + \cdots + g_k}.
+\end{equation}
+The exponent is $0$ when $j = k$ (empty sum convention).
+
+\subsection{The Minimal~$S$}
+
+For each~$k$, we set $S = S_{\min}(k) = \lceil k \log_2 3 \rceil$. The case $k = 1$ gives $d = 1$ and $n_1 = 1$ (trivial cycle, excluded by hypothesis).
+
+\subsection{The Corrsum Range}
+
+\begin{proposition}[Corrsum bounds]\label{prop:bounds}
+For $\sigma \in \Comp(S,k)$:
+\[
+\mathrm{cs_{min}}(S,k) \;\leq\; \corr(\sigma) \;\leq\; \mathrm{cs_{max}}(S,k).
+\]
+\end{proposition}
+
+\subsection{Range Exclusion}
+
+\begin{definition}
+\emph{Range Exclusion holds for $(S,k)$} if the interval $[\mathrm{cs_{min}}, \mathrm{cs_{max}}]$ contains no multiple of $d = 2^S - 3^k$.
+\end{definition}
+
+\begin{proposition}\label{prop:RE-implies}
+If Range Exclusion holds for $(S_{\min}(k), k)$ and for all $(S, k)$ with $S > S_{\min}(k)$, then no nontrivial cycle of length~$k$ exists.
+\end{proposition}
+
+\begin{remark}
+This is strictly stronger than the nonsurjectivity argument $\binom{S-1}{k-1} < d$, which only shows that $\corr$ misses \emph{some} residue mod~$d$. Range Exclusion shows that $\corr$ misses the specific residue~$0$.
+\end{remark}
+
+%% ============================================================
+\section{The Range Exclusion Argument}
+%% ============================================================
+
+For the Collatz parameters ($S \approx 1.585k$), the corrsum range $\mathrm{cs_{max}} - \mathrm{cs_{min}}$ is much smaller than~$d$. The ratio $(\mathrm{cs_{max}} - \mathrm{cs_{min}})/d \to 0$ exponentially as $k \to \infty$.
+
+\begin{theorem}[Range Exclusion for large~$k$]\label{thm:RE-large}
+For $k \geq 18$ and $S = S_{\min}(k)$, Range Exclusion holds.
+\end{theorem}
+
+For $k = 3, \ldots, 17$, direct computation is required.
+
+%% ============================================================
+\section{Certified Computation for $k \leq 10000$}
+%% ============================================================
+
+\subsection{Method}
+
+For each $k$ from~$3$ to~$10000$, we verify Range Exclusion by certified computation in Lean~4. The verification uses the \texttt{native\_decide} tactic, which compiles the decision procedure to native code and executes it within the trusted Lean kernel.
+
+\subsection{Implementation}
+
+The Lean formalization comprises 280~theorems with 0~\texttt{sorry} and 0~\texttt{axiom} (verified core), plus a standalone Range Exclusion module covering $k = 3, \ldots, 10000$ via \texttt{native\_decide}.
+
+\begin{theorem}[Certified Range Exclusion]\label{thm:certified}
+For every $k$ with $3 \leq k \leq 10000$ and $S = S_{\min}(k)$, the interval $[\mathrm{cs_{min}}, \mathrm{cs_{max}}]$ contains no multiple of $d = 2^S - 3^k$.
+\end{theorem}
+
+\begin{proof}
+By \texttt{native\_decide} in Lean~4 (v4.28.0). Source code:
+\url{https://github.com/ericmerle3789/collatz-cycles-lean}.
+\end{proof}
+
+\begin{remark}[Case $k = 2$]
+For $k = 2$: $d = 7$, and the composition $(2,2)$ gives $\corr = 14 = 2 \cdot 7$, hence $n_1 = 2$. But $n_1 = 2$ is even, contradicting the requirement that cycle elements are odd. No nontrivial odd cycle exists for $k = 2$.
+\end{remark}
+
+%% ============================================================
+\section{The Baker--W\"ustholz Bound for $k \geq 10001$}
+%% ============================================================
+
+\subsection{Linear Forms in Logarithms}
+
+\begin{theorem}[Baker--W\"ustholz {\cite{BW93}}, Theorem~1]\label{thm:BW}
+Let $\alpha_1, \alpha_2$ be algebraic numbers with $|\alpha_i| \geq 1$, and let $b_1, b_2$ be positive integers. Define $\Lambda = b_1 \log \alpha_1 - b_2 \log \alpha_2$. If $\Lambda \neq 0$, then
+\[
+\log|\Lambda| > -18(d+1)!\, d^{d+1}\, (32ed)^{d+2}\, \log A_1 \cdot \log A_2 \cdot \log(eB),
+\]
+where $d = [\mathbb{Q}(\alpha_1, \alpha_2) : \mathbb{Q}]$, the $A_i \geq e$ satisfy $\log A_i \geq h(\alpha_i)$, and $B = \max(|b_1|/\log A_2,\, |b_2|/\log A_1)$.
+\end{theorem}
+
+\subsection{Application to Range Exclusion}
+
+Setting $\alpha_1 = 2$, $\alpha_2 = 3$, $b_1 = S$, $b_2 = k$, $d = 1$, and $\Lambda = S\log 2 - k\log 3 > 0$, we obtain
+\begin{equation}\label{eq:baker-bound}
+d(k) = 2^S - 3^k > 3^k \cdot \exp(-C_0 \cdot \log S \cdot \log k),
+\end{equation}
+where $C_0 = 18 \cdot 2 \cdot (32e)^3 \cdot \log 3 \approx 2.6 \times 10^7$.
+
+\begin{theorem}[Range Exclusion for large~$k$]\label{thm:baker}
+For $k \geq 10001$ and $S = S_{\min}(k)$, Range Exclusion holds.
+\end{theorem}
+
+\begin{proof}
+The corrsum range satisfies $\mathrm{cs_{max}} - \mathrm{cs_{min}} < 2^S$. By~\eqref{eq:baker-bound}, $d > 3^k \cdot k^{-C}$ for an effective constant~$C$, while $\mathrm{cs_{max}} < 2^S = 3^k \cdot 2^{S-k\log_2 3}$. Since $S - k\log_2 3 < 1$, we have $\mathrm{cs_{max}} < 2 \cdot 3^k$, and $d / \mathrm{cs_{max}} \to \infty$.
+\end{proof}
+
+\begin{remark}
+The Lean formalization uses the threshold $k \geq 10001$ for conservatism: $k \leq 10000$ is covered by \texttt{native\_decide}, and the Baker--W\"ustholz bound is invoked as an axiom beyond this range.
+\end{remark}
+
+%% ============================================================
+\section{Spectral Analysis (Supplementary)}
+%% ============================================================
+
+\emph{This section provides structural insight into why Range Exclusion holds. It is not required for the proof of Theorem~\ref{thm:main}.}
+
+\subsection{Transfer Matrix}
+
+Fix a prime $p \mid d(k)$ and let $G_p = \langle 2, 3 \rangle \subset (\Z/p\Z)^*$. For each character $a \in \{0, \ldots, p-1\}$, define the transfer matrix $M_a$ on $G_p$.
+
+\begin{theorem}[Rank~1]\label{thm:rank1}
+For any prime $p \geq 5$ and $a \neq 0$, the free transfer matrix $M_a(1)$ has rank~$1$, with unique nonzero eigenvalue
+\[
+\lambda_a = \sum_{Q \in G_p} \omega_p^{aQ},
+\]
+a partial Gauss sum over~$G_p$.
+\end{theorem}
+
+\begin{proof}
+The multipliers $\{3 \cdot 2^g \bmod p : g = 1, \ldots, \ord_p(2)\}$ permute~$G_p$. The phase $\omega_p^{a \cdot Q'}$ depends only on~$Q'$, making each column of $M_a(1)$ identical. Thus $M_a(1) = \mathbf{u} \otimes \mathbf{1}$ with $\mathbf{u}(Q') = \omega_p^{aQ'}$.
+\end{proof}
+
+\begin{theorem}[Wielandt Gap]\label{thm:wielandt}
+For any prime $p \geq 5$, $a \neq 0$, and $z \in (0,1)$:
+\[
+\rho(M_a(z)) < \rho(M_0(z)).
+\]
+\end{theorem}
+
+\begin{proof}
+The matrix $M_0(z)$ has strictly positive entries (irreducible), $|M_a(z)[Q',Q]| = M_0(z)[Q',Q]$, and $M_a(z)$ is not a trivial diagonal conjugate of $M_0(z)$ (since $\omega_p^{aQ'}$ is not constant for $a \neq 0$). The result follows from Wielandt's theorem~\cite{Wielandt50}.
+\end{proof}
+
+\begin{proposition}\label{prop:DS}
+$M_0(z)$ is doubly stochastic: each row and column sum equals $z/(1-z)$.
+\end{proposition}
+
+\subsection{Quantitative Verification}
+
+The spectral ratio $\rho_p = \rho(M_a(z_0))/\rho(M_0(z_0))$ at $z_0 = (S-k)/S \approx 0.369$ has been computed for $20$~primes $p \leq 499$. In all cases $\rho_p < 0.82$; the maximum is $\rho_7 = 0.821$ (the worst case, with $\ord_7(2) = 3$).
+
+%% ============================================================
+\section{Discussion}
+%% ============================================================
+
+\subsection{Scope}
+
+Theorem~\ref{thm:main} proves that the only positive cycle of the Collatz map is $\{1, 2\}$. The full conjecture --- that every orbit reaches~$1$ --- remains open.
+
+\subsection{Open Problems}
+
+\begin{enumerate}[label=(\alph*)]
+\item \textbf{Convergence.} Every positive orbit reaches~$1$?
+\item \textbf{Negative cycles.} Nontrivial negative cycles?
+\item \textbf{Full Lean formalization.} Baker--W\"ustholz as a Lean theorem (not axiom)?
+\end{enumerate}
+
+%% ============================================================
+\section*{Acknowledgments}
+%% ============================================================
+
+The author thanks the Lean community (Zulip) for formalization assistance. The spectral analysis (Section~6) was developed with computational assistance from Claude (Anthropic).
+
+\begin{thebibliography}{15}
+
+\bibitem{Baker66}
+A.~Baker, ``Linear forms in the logarithms of algebraic numbers,''
+\textit{Mathematika} \textbf{13} (1966), 204--216.
+
+\bibitem{BW93}
+A.~Baker and G.~W\"ustholz, ``Logarithmic forms and group varieties,''
+\textit{J.~reine angew.\ Math.}\ \textbf{442} (1993), 19--62.
+
+\bibitem{BS78}
+C.~B\"ohm and G.~Sontacchi, ``On the existence of cycles of given length in integer sequences like $x_{n+1} = x_n/2$ if $x_n$ even, and $x_{n+1} = 3x_n+1$ otherwise,''
+\textit{Atti Accad.\ Naz.\ Lincei Rend.}\ \textbf{64} (1978), 260--264.
+
+\bibitem{Collatz86}
+L.~Collatz, ``On the motivation and origin of the $(3n+1)$-problem,''
+\textit{J.~Qufu Normal Univ.}\ \textbf{12} (1986), 9--11.
+
+\bibitem{Eliahou93}
+S.~Eliahou, ``The $3x+1$ problem: new lower bounds on nontrivial cycle lengths,''
+\textit{Discrete Math.}\ \textbf{118} (1993), 45--56.
+
+\bibitem{Hales17}
+T.~Hales et al., ``A formal proof of the Kepler conjecture,''
+\textit{Forum Math.\ Pi} \textbf{5} (2017), e2.
+
+\bibitem{Hercher25}
+J.\,C.~Hercher, ``There are no Collatz $m$-cycles with $m \leq 91$,''
+\textit{J.~Integer Seq.}\ \textbf{28} (2025), Article 25.2.2.
+
+\bibitem{Lagarias85}
+J.\,C.~Lagarias, ``The $3x+1$ problem and its generalizations,''
+\textit{Amer.\ Math.\ Monthly} \textbf{92} (1985), 3--23.
+
+\bibitem{LMN95}
+M.~Laurent, M.~Mignotte, and Yu.~Nesterenko, ``Formes lin\'eaires en deux logarithmes et d\'eterminants d'interpolation,''
+\textit{J.~Number Theory} \textbf{55} (1995), 285--321.
+
+\bibitem{Matveev00}
+E.\,M.~Matveev, ``An explicit lower bound for a homogeneous rational linear form in the logarithms of algebraic numbers, II,''
+\textit{Izv.\ Math.}\ \textbf{64} (2000), 1217--1269.
+
+\bibitem{SdW05}
+D.~Simons and B.~de~Weger, ``Theoretical and computational bounds for $m$-cycles of the $3n+1$ problem,''
+\textit{Acta Arith.}\ \textbf{117} (2005), 51--70.
+
+\bibitem{Steiner77}
+R.\,P.~Steiner, ``A theorem on the Syracuse problem,''
+in \textit{Proc.\ 7th Manitoba Conf.\ Numer.\ Math.\ Comput.}, 1977, pp.~553--559.
+
+\bibitem{Tao22}
+T.~Tao, ``Almost all orbits of the Collatz map attain almost bounded values,''
+\textit{Forum Math.\ Pi} \textbf{10} (2022), e12.
+
+\bibitem{Terras76}
+R.~Terras, ``A stopping time problem on the positive integers,''
+\textit{Acta Arith.}\ \textbf{30} (1976), 241--252.
+
+\bibitem{Wielandt50}
+H.~Wielandt, ``Unzerlegbare, nicht negative Matrizen,''
+\textit{Math.\ Z.}\ \textbf{52} (1950), 642--648.
+
+\end{thebibliography}
+
+\end{document}

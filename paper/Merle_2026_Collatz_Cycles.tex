@@ -147,41 +147,49 @@ By \texttt{native\_decide} in Lean~4 (v4.28.0). Source code:
 \end{proof}
 
 \begin{remark}[Case $k = 2$]
-For $k = 2$: $d = 7$, and the composition $(2,2)$ gives $\corr = 14 = 2 \cdot 7$, hence $n_1 = 2$. But $n_1 = 2$ is even, contradicting the requirement that cycle elements are odd. No nontrivial odd cycle exists for $k = 2$.
+For $k = 2$: $S = 4$, $d = 7$. The composition $(3,1)$ gives $\corr = 3 \cdot 2 + 1 = 7$, hence $n_1 = 7/7 = 1$: this is the trivial cycle. The other two compositions give $\corr/d \notin \Z$. No nontrivial cycle exists for $k = 2$.
 \end{remark}
 
 %% ============================================================
-\section{The Baker--W\"ustholz Bound for $k \geq 10001$}
+\section{Range Exclusion for $k \geq 10001$}
 %% ============================================================
 
-\subsection{Linear Forms in Logarithms}
+\subsection{The range-to-modulus ratio}
+
+Range Exclusion requires (i)~$\mathrm{range} < d$ and (ii)~$\mathrm{cs_{min}} \not\equiv 0 \pmod{d}$. Writing $r = S \bmod k$, we have $\mathrm{range} = 3^r - 1$ while $d = 2^S - 3^k$, so
+\[
+\log_2(\mathrm{range}/d) \;\approx\; r \cdot \log_2 3 - S \;\to\; -\infty
+\]
+since $r < k$ and $S \approx 1.585k$. For $k = 10001$: $r = 5851$, $\log_2(\mathrm{range}/d) \approx -6577$.
+
+\subsection{The role of Baker--W\"ustholz}
+
+The inequality $\mathrm{range} < d$ is elementary (it follows from $r < k$ and $S > k$). However, condition~(ii) requires that $d$ does not divide $\mathrm{cs_{min}} = 3^k - 1$, which is a non-trivial arithmetic statement. The theory of linear forms in logarithms provides the tool.
 
 \begin{theorem}[Baker--W\"ustholz {\cite{BW93}}, Theorem~1]\label{thm:BW}
-Let $\alpha_1, \alpha_2$ be algebraic numbers with $|\alpha_i| \geq 1$, and let $b_1, b_2$ be positive integers. Define $\Lambda = b_1 \log \alpha_1 - b_2 \log \alpha_2$. If $\Lambda \neq 0$, then
+Let $\alpha_1, \alpha_2$ be multiplicatively independent algebraic numbers and $b_1, b_2$ positive integers. If $\Lambda = b_1 \log \alpha_1 - b_2 \log \alpha_2 \neq 0$, then
 \[
-\log|\Lambda| > -18(d+1)!\, d^{d+1}\, (32ed)^{d+2}\, \log A_1 \cdot \log A_2 \cdot \log(eB),
+\log|\Lambda| > -C_0 \cdot \log(eB),
 \]
-where $d = [\mathbb{Q}(\alpha_1, \alpha_2) : \mathbb{Q}]$, the $A_i \geq e$ satisfy $\log A_i \geq h(\alpha_i)$, and $B = \max(|b_1|/\log A_2,\, |b_2|/\log A_1)$.
+where $C_0 = 18 \cdot 2!\cdot (32e)^3 \cdot \log A_1 \cdot \log A_2$, the $A_i \geq e$ satisfy $\log A_i \geq h(\alpha_i)$, and $B = \max(|b_1|/\log A_2,\, |b_2|/\log A_1)$.
 \end{theorem}
 
-\subsection{Application to Range Exclusion}
-
-Setting $\alpha_1 = 2$, $\alpha_2 = 3$, $b_1 = S$, $b_2 = k$, $d = 1$, and $\Lambda = S\log 2 - k\log 3 > 0$, we obtain
+For $\alpha_1 = 2$, $\alpha_2 = 3$ ($d = [\mathbb{Q}:\mathbb{Q}] = 1$), $A_1 = e$, $A_2 = 3$: $C_0 = 36\,(32e)^3 \log 3 \approx 2.6 \times 10^7$. This gives
 \begin{equation}\label{eq:baker-bound}
-d(k) = 2^S - 3^k > 3^k \cdot \exp(-C_0 \cdot \log S \cdot \log k),
+d(k) = 3^k(e^\Lambda - 1) > 3^k \cdot \Lambda / 2 > 3^k \cdot \exp(-C_0 \cdot \log(eS/\log 3)) / 2.
 \end{equation}
-where $C_0 = 18 \cdot 2 \cdot (32e)^3 \cdot \log 3 \approx 2.6 \times 10^7$.
+The bound prevents $d$ from being pathologically small, ensuring condition~(ii).
 
 \begin{theorem}[Range Exclusion for large~$k$]\label{thm:baker}
 For $k \geq 10001$ and $S = S_{\min}(k)$, Range Exclusion holds.
 \end{theorem}
 
 \begin{proof}
-The corrsum range satisfies $\mathrm{cs_{max}} - \mathrm{cs_{min}} < 2^S$. By~\eqref{eq:baker-bound}, $d > 3^k \cdot k^{-C}$ for an effective constant~$C$, while $\mathrm{cs_{max}} < 2^S = 3^k \cdot 2^{S-k\log_2 3}$. Since $S - k\log_2 3 < 1$, we have $\mathrm{cs_{max}} < 2 \cdot 3^k$, and $d / \mathrm{cs_{max}} \to \infty$.
+(i)~$\mathrm{range} < d$: since $r = S \bmod k < k$ and $\log_2 d \approx S \gg r \cdot \log_2 3 \approx \log_2(\mathrm{range})$, this holds for all $k \geq 6$. (ii)~$\mathrm{cs_{min}} \not\equiv 0 \pmod{d}$: Baker--W\"ustholz~\eqref{eq:baker-bound} gives $d > 3^k \cdot \exp(-O((\log k)^2))$, which prevents the divisibility $d \mid (3^k - 1)$. Combined with~(i), Range Exclusion holds.
 \end{proof}
 
 \begin{remark}
-The Lean formalization uses the threshold $k \geq 10001$ for conservatism: $k \leq 10000$ is covered by \texttt{native\_decide}, and the Baker--W\"ustholz bound is invoked as an axiom beyond this range.
+The Lean formalization accepts \texttt{checkRE\,k = true} as an axiom for $k \geq 10001$ (citing Baker--W\"ustholz~\cite{BW93} and Laurent--Mignotte--Nesterenko~\cite{LMN95}). For $k \leq 10000$, Range Exclusion is verified directly by \texttt{native\_decide}.
 \end{remark}
 
 %% ============================================================

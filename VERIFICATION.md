@@ -6,9 +6,10 @@ How to verify each claim in the paper.
 
 | Claim | Verification |
 |-------|-------------|
-| Steiner's equation (eq. 1–3) | `lean/verified/CollatzVerified/Basic.lean`, theorem `steiner_equation` |
-| corrsum bounds (Proposition 2.1) | `lean/range-exclusion/CorrSumAvoidance/Basic.lean`, `cs_min`, `cs_max` |
-| Range Exclusion ⟹ no cycle (Prop. 2.2) | `lean/range-exclusion/CorrSumAvoidance/RangeExclusion.lean`, `range_exclusion_implies_no_cycle` |
+| Steiner's equation (eq. 1–3) | `lean/skeleton/JunctionTheorem.lean`, theorem `steiner_equation` |
+| corrsum definition | `lean/range-exclusion/CorrSumAvoidance/Basic.lean`, def `corrSum` |
+| corrsum bounds (Proposition 2.1) | `lean/range-exclusion/CorrSumAvoidance/RangeExclusion.lean`, defs `cs_min`, `cs_max` |
+| Range Exclusion check | `lean/range-exclusion/CorrSumAvoidance/RangeExclusion.lean`, def `checkRE` |
 
 ## Section 4: Certified computation (k ≤ 10000)
 

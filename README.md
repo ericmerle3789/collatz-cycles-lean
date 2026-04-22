@@ -1,3 +1,32 @@
+> **⚠️ Repository archived 2026-04-22 — historical reference only.**
+>
+> **Active repo** : [collatz-nocycle-lean4](https://github.com/ericmerle3789/collatz-nocycle-lean4)
+>
+> ## ⚠️ Known formula error — do NOT cite the `lean/range-exclusion/` module
+>
+> The `lean/range-exclusion/` directory of this repository contains a Lean module with a **documented formula error** : the function computed in that module differs from Steiner's `corrSum`, so any result proven in `range-exclusion/` does NOT establish cycle non-existence. See `docs/AUDIT_CORRSUM.md` in this repo for the full diagnostic.
+>
+> **Rule for readers and reviewers** :
+> - ❌ Do NOT copy, cite, or re-use any theorem from `lean/range-exclusion/`.
+> - ❌ Do NOT treat the `range-exclusion/` results as valid Collatz cycle non-existence proofs.
+> - ✅ The correct results of this archived repo are in `lean/verified/` (k = 3..15, 280 theorems, 0 sorry, 0 axiom, Lean 4.15) and `lean/skeleton/` (Junction Theorem skeleton).
+> - ✅ For current and publication-target work, consult [collatz-nocycle-lean4](https://github.com/ericmerle3789/collatz-nocycle-lean4).
+>
+> ## Relationship to the active repo
+>
+> `collatz-nocycle-lean4` supersedes this companion repo with :
+> - A single consolidated Lean tree (36 files, 393 theorems, 0 sorry).
+> - No known formula errors.
+> - Central theorem `no_nontrivial_cycle_phase59` depends on `propext, Classical.choice, Quot.sound` only — verified via `#print axioms` on 2026-04-22.
+>
+> ## Maintenance
+>
+> No further commits. Issues → [active repo issue tracker](https://github.com/ericmerle3789/collatz-nocycle-lean4/issues).
+>
+> — Eric Merle, 2026-04-22
+
+---
+
 # collatz-cycles-lean
 
 Companion code for: *Nonexistence of Nontrivial Cycles in the Collatz Dynamics* (Eric Merle, 2026).

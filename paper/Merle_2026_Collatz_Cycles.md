@@ -1,3 +1,8 @@
+> **Erratum (2026-10-02).** This draft does not prove that no nontrivial Collatz cycle exists; its title and
+> §1.1, §3–5, §7.1 and §7.4 (last row) overstate it. What survives: Theorem 1 for S = ⌈k·log₂3⌉ (by
+> `native_decide`, not by the kernel alone) and Theorem 2 (conditional on one axiom). Reference [7] is
+> Christian Hercher, J. Integer Seq. 26 (2023), Article 23.3.5. Details: README.
+
 # Nonexistence of Nontrivial Cycles in the Collatz Dynamics
 
 **Eric Merle**
